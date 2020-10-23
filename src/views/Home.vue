@@ -3,18 +3,20 @@
     <v-flex xs12>
       <v-card>
         <v-row justify="center">
-          <v-date-picker 
+          <v-date-picker
             v-model="date"
             full-width
             locale="es-mx"
             :min="min"
-            :max="max">
-            </v-date-picker>
+            :max="max"
+            @change="getDolar(date)"
+          >
+          </v-date-picker>
         </v-row>
       </v-card>
       <v-card color="error" dark>
         <v-card-text class="display-1 text-center">
-          {{dll}}
+          {{ dll }}
         </v-card-text>
       </v-card>
     </v-flex>
@@ -22,27 +24,35 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 export default {
   name: "Home",
   components: {},
   data: () => ({
     date: new Date().toISOString().substr(0, 10),
-    min: '1984',
+    min: "1984",
     max: new Date().toISOString().substr(0, 10),
-    dll: '',
+    dll: "",
   }),
-  methods:{
-    async getDolar(){
-      //https://mindicador.cl/api/dolar
-      let x = this.max.split("").reverse().join("");
-      x = x.substr(0,6) + x.substr(6, 10).split("").reverse().join("");
-      let datos =  await axios.get(`https://mindicador.cl/api/dolar/${x}`);
-      this.dll = await datos.data.serie[0].valor;
+  methods: {
+    async getDolar(date) {
+      let x = date.split("-").reverse().join("-");
+      let datos = await axios.get(`https://mindicador.cl/api/dolar/${x}`);
+      try {
+        if(datos.data.serie.length > 0){
+          this.dll = await datos.data.serie[0].valor;
+        }else if(x.split('-')[0] == 18){
+          this.dll = "Dia de los duvalincitos";
+        }else{
+          this.dll = "Sin datos";
+        }
+      } catch (error) {
+        console.log(error);
+      }
     },
   },
   created() {
-    this.getDolar();
+    this.getDolar(this.max);
   },
 };
 </script>
